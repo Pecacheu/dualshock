@@ -275,7 +275,9 @@ function filter(input, prevVal, amt) {
 }
 
 function handle(data, prev, func) {
-	var keys = Object.keys(data); for(var i=0,l=keys.length; i<l; i++) {
-		if(data[keys[i]] != prev[keys[i]]) func(keys[i], data[keys[i]]);
+	if(prev.length) {
+		var keys = Object.keys(data); for(var i=0,l=keys.length; i<l; i++) {
+			if(data[keys[i]] != prev[keys[i]]) func(keys[i], data[keys[i]]);
+		}
 	}
 }
