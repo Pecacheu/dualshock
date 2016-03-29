@@ -10,6 +10,8 @@ The DS3's battery percentage is only accurate to 20%, so the only possible value
 - Use max and min instead of bits.
 - Move supList entries to separate files, as well as the custom functions like ds3 and ds4 api functions.
 - ACTUALLY WRITE DOCUMENTATION
+- Add example for syncronous reading from prevDigital, prevAnalog, etc. instead of using async callbacks.
+- ds.getType without providing type should list all supported controllers regardless of type.
 
 Maybe useful (somewhere else) functions:
 

@@ -95,7 +95,7 @@ function genericParse(data) {
 		this.prevMotion = motion;
 	}
 	if(this.onstatus && this.map.special.charge) { //Status:
-		var status = parseStatus(data, this); handle(status, this.prevStatus, this.onstatus);
+		var status = parseStatus(data, this); handle(status, this.prevStatus, this.onstatus, true);
 		this.prevStatus = status;
 	}
 }
@@ -274,8 +274,8 @@ function filter(input, prevVal, amt) {
 	return prevVal;
 }
 
-function handle(data, prev, func) {
-	if(prev.length) {
+function handle(data, prev, func, trigFirst) {
+	if(prev.length || trigFirst) {
 		var keys = Object.keys(data); for(var i=0,l=keys.length; i<l; i++) {
 			if(data[keys[i]] != prev[keys[i]]) func(keys[i], data[keys[i]]);
 		}
