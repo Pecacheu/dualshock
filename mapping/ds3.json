@@ -1,0 +1,71 @@
+{
+  "vendor": 1356,
+  "product": 616,
+  "button": {
+    "cross": [3,6],
+    "circle": [3,5],
+    "square": [3,7],
+    "triangle": [3,4],
+    "l1": [3,2],
+    "l2": [3,0],
+    "l3": [2,1],
+    "r1": [3,3],
+    "r2": [3,1],
+    "r3": [2,2],
+    "up": [2,4],
+    "down": [2,6],
+    "left": [2,7],
+    "right": [2,5],
+    "select": [2,0],
+    "start": [2,3],
+    "ps": [4,0]
+  },
+  "analog": {
+    "lStickX": 6,
+    "lStickY": 7,
+    "rStickX": 8,
+    "rStickY": 9,
+    "cross": 24,
+    "circle": 23,
+    "square": 25,
+    "triangle": 22,
+    "up": 14,
+    "down": 16,
+    "left": 17,
+    "right": 15,
+    "l1": 20,
+    "l2": 18,
+    "r1": 21,
+    "r2": 19
+  },
+  "motion": {
+    "bits": 10,
+    "accelX": [41,42],
+    "accelY": [43,44],
+    "accelZ": [45,46],
+    "gyroYaw": [47,48]
+  },
+  "status": {
+    "mode": {
+      "index": 31,
+      "Bluetooth (Rumbling)": 20,
+      "Bluetooth": 22,
+      "USB": 18,
+      "USB (Rumbling)": 16,
+      "USB (Not Charging)": [[31,20,true],[30,6,true]]
+    },
+    "battery": 33,
+    "charge": {
+      "index": 29,
+      "...": 1,
+      "Charging": 2,
+      "Not Charging": 3
+    }
+  },
+  "special": [
+    "rumble",
+    "light",
+    "motion",
+    "charge"
+  ]
+}

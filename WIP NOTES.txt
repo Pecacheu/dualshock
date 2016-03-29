@@ -1,0 +1,25 @@
+Battery:
+The DS3's battery percentage is only accurate to 20%, so the only possible values of this are 0, 20, 40, 80, and 100.
+
+//TODO:
+- Make parseAnalog and parseMotion more effecient by for loop itterating over map instead of data.
+- Anything to do with vMax in parseMotion?
+- Handle 'controller not found' and other errors more smoothly.
+- Battery status.
+- Seperate callback for each type of event (motion, button, analog)
+- Use max and min instead of bits.
+- Move supList entries to separate files, as well as the custom functions like ds3 and ds4 api functions.
+- ACTUALLY WRITE DOCUMENTATION
+
+Maybe useful (somewhere else) functions:
+
+//function isDS3(dev) { return dev.vendorId == 1356 && dev.productId == 616; }
+//function isDS4(dev) { return dev.vendorId == 1356 && dev.productId == 1476; }
+//function isRumblePad(dev) { return dev.vendorId == 1133 && dev.productId == 49689; } //TEMP
+//function lsMax(arr) {for(var i=0,l=arr.length,m=0,p=0;i<l;i++)if(arr[i]>m)m=arr[i],p=i;return [m,p]}
+//function lsOrder(a) {var r=[];while(a){var m=lsMax(a);r.push(m[0]);a.splice(m[1],1)}return r}
+/*function objGet(obj, find) {
+	var kl = Object.keys(obj);
+	for(var i=0,l=kl.length; i<l; i++) { if(obj[kl[i]] == find) return kl[i]; }
+	return false;
+}*/
