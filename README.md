@@ -22,3 +22,7 @@ Install with `npm install dualshock`, then include with `ds = require('dualshock
 - **gamepad.type** same as `ds.getType(gamepad)`, but shorter
 
 All callback functions follow the format `function(buttonOrAxis, value)`
+
+#### Examples:
+To use the example program, place `main.js` and `index.js` in an empty folder and run the command `node index.js`.
+The actual example is in main.js. index.js is only an auto-dependency-loader.
