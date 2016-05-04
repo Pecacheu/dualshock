@@ -1,4 +1,4 @@
-//Node.js Auto Loader v3.0, created by Bryce Peterson (Nickname: Pecacheu, Email: Pecacheu@gmail.com). Copyright 2016, All rights reserved.
+//Node.js Auto Loader v3.1, created by Bryce Peterson (Nickname: Pecacheu, Email: Pecacheu@gmail.com). Copyright 2016, All rights reserved.
 
 var os = require('os'),
 fs = require('fs'),
@@ -58,22 +58,24 @@ function runJSLoader() {
 	console.log("Starting Installer..."); console.log();
 	checkInternet(function(res) {
 		if(res) {
-			createNewFolder(__dirname+"/pages/resources/");
-			console.log("Downloading JavaScript Libraries..."); var i = 0;
-			var fileName = externalFiles[i].substring(externalFiles[i].lastIndexOf('/')+1);
-			if(!folderExists(determinePath(fileName))) createNewFolder(determinePath(fileName));
-			var file = fs.createWriteStream(determinePath(fileName)+fileName);
-			function response(resp) {
-				fileName = externalFiles[i].substring(externalFiles[i].lastIndexOf('/')+1);
+			if(externalFiles.length) {
+				createNewFolder(__dirname+"/pages/resources/");
+				console.log("Downloading JavaScript Libraries..."); var i = 0;
+				var fileName = externalFiles[i].substring(externalFiles[i].lastIndexOf('/')+1);
 				if(!folderExists(determinePath(fileName))) createNewFolder(determinePath(fileName));
-				file = fs.createWriteStream(determinePath(fileName)+fileName);
-				resp.pipe(file); file.on('finish', function() {
-					console.log("Downloaded '"+fileName+"'");
-					i++; if(i >= externalFiles.length) { console.log(); doInstall(); }
-					else http.get(externalFiles[i], response);
-				});
-			}
-			http.get(externalFiles[i], response);
+				var file = fs.createWriteStream(determinePath(fileName)+fileName);
+				function response(resp) {
+					fileName = externalFiles[i].substring(externalFiles[i].lastIndexOf('/')+1);
+					if(!folderExists(determinePath(fileName))) createNewFolder(determinePath(fileName));
+					file = fs.createWriteStream(determinePath(fileName)+fileName);
+					resp.pipe(file); file.on('finish', function() {
+						console.log("Downloaded '"+fileName+"'");
+						i++; if(i >= externalFiles.length) { console.log(); doInstall(); }
+						else http.get(externalFiles[i], response);
+					});
+				}
+				http.get(externalFiles[i], response);
+			} else doInstall();
 		} else {
 			console.log("Error: No Internet Connection Detected!");
 			console.log(); process.exit();
