@@ -268,6 +268,7 @@ function smooth(input, prevData, amt) {
 }
 
 function filter(input, prevVal, amt) {
+	if(Math.abs(input - 127) <= amt) return 0;
 	if(Math.abs(input - prevVal) > amt) return input;
 	return prevVal;
 }
