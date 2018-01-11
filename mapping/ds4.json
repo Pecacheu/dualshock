@@ -1,0 +1,28 @@
+{
+  "vendor": 1356,
+  "product": 1476,
+  "bt-id-byte":17,
+  "bt-offset":2,
+  "button": {
+  },
+  "analog": {
+    "lStickX": 1,
+    "lStickY": 2,
+    "rStickX": 3,
+    "rStickY": 4
+  },
+  "motion": {
+  },
+  "status": {
+    "audio":30
+  },
+  "special": [
+    "rumble",
+    "light",
+    "motion",
+    "charge",
+    "touch",
+    "mic",
+    "audio"
+  ]
+}

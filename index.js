@@ -1,53 +1,83 @@
-var fs = require('fs'),
-hid = require('node-hid'),
-chalk = require('chalk');
+//This work is licensed under a GNU General Public License, v3.0. Visit http://gnu.org/licenses/gpl-3.0-standalone.html for details.
+//Node DualShock Library, Copyright (©) 2017 Bryce Peterson (Nickname: Pecacheu, Email: Pecacheu@gmail.com)
 
-function JSONFl(itm) { return itm.substring(itm.length-5) == ".json"; }
-function error(text, dt) { throw new Error(chalk.red("Error: ")+chalk.dim(text)+(dt?"\n"+dt:"")); }
-function isDev(dev) { return dev.vendorId == this.vendor && dev.productId == this.product; }
-const RD_ERR = "Error: could not read from HID device";
+"use strict";
+
+const fs = require('fs'), hid = require('node-hid'), chalk = require('chalk');
+function error(text, dt) { throw chalk.red("Error: ")+chalk.dim(text)+(dt?"\n"+dt:""); }
+const RD_ERR = "Error: could not read from HID device", MAPDIR = __dirname+"/mapping/";
 
 //Extra Useful Functions:
-function obMax(o) {var k=Object.keys(o),i=0,l=k.length,m=0,s;for(;i<l;i++)if(o[k[i]]>m)m=o[k[i]],s=i;return k[s]}
-//function arrDif(a,b) {var i=0,l=a.length;if(l!=b.length)return 1;for(;i<l;i++)if(a[i]!=b[i])return 1;return 0}
-//function objDif(a,b) {for(var k=Object.keys(a),i=0,l=k.length;i<l;i++)if(a[k[i]]!=b[k[i]])return 1;return 0}//if(l!=Object.keys(b).length)return 1;
-function objAdd(a,b) {for(var k=Object.keys(b),i=0,l=k.length;i<l;i++)a[k[i]]=b[k[i]]}
+function obMax(o) {let k=Object.keys(o),i=0,l=k.length,m=0,s;for(;i<l;i++)if(o[k[i]]>m)m=o[k[i]],s=i;return k[s]}
+//function arrDif(a,b) {let i=0,l=a.length;if(l!=b.length)return 1;for(;i<l;i++)if(a[i]!=b[i])return 1;return 0}
+//function objDif(a,b) {for(let k=Object.keys(a),i=0,l=k.length;i<l;i++)if(a[k[i]]!=b[k[i]])return 1;return 0}//if(l!=Object.keys(b).length)return 1;
+function objAdd(a,b) {for(let k=Object.keys(b),i=0,l=k.length;i<l;i++)a[k[i]]=b[k[i]]}
 
 //Controller Mappings:
-var mapDir = __dirname+"/mapping/", mapLst = fs.readdirSync(mapDir).filter(JSONFl), mapping = {};
-for(var i=0,l=mapLst.length; i<l; i++) {
-	mapping[mapLst[i].split('.')[0]] = JSON.parse(fs.readFileSync(mapDir+mapLst[i], 'utf8'));
-} 
-var supList = { //Custom Controller APIs:
-	ds3: [ds3SetLed, ds3Rumble, ds3RumbleAdd],
-	//ds4: [ds4SetLed, ds4Rumble, ds4RumbleAdd, ds4Parse]
-};
-
-//Get a list of available gamepads:
-exports.getDevices = function(type) {
-	if(typeof type == "string") {
-		var devices = hid.devices(); type = type.toLowerCase();
-		if(mapping[type]) return devices.filter(isDev.bind(mapping[type]));
-	}
-	error("'"+type+"' is not a supported controller type!");
+const dir = fs.readdirSync(MAPDIR), mapping = {}, api = {};
+for(let i=0,l=dir.length,f; i<l; i++) {
+	f = dir[i].split('.');
+	if(f[1] == 'json') mapping[f[0]] = JSON.parse(fs.readFileSync(MAPDIR+dir[i], 'utf8'));
+	else if(f[1] == 'js') api[f[0]] = require(MAPDIR+dir[i]);
 }
 
-//Open a gamepad device:
-exports.open = function(device, options) {
-	if(typeof options != "object") options = {};
-	var gType, gKeys=Object.keys(mapping), l=gKeys.length, opt=options;
-	for(var i=0;i<l;i++) if(isDev.call(mapping[gKeys[i]],device)) {gType=gKeys[i];break}
+//Get a list of available gamepads.
+exports.getDevices = function(type) {
+	const hidDev = hid.devices(), dev = [];
+	for(let i=0,l=hidDev.length,d,t; i<l; i++) {
+		d = hidDev[i]; t = getType(d);
+		if(t) { d.type = t; d.mode = getMode(d); dev.push(d); }
+	}
+	if(type) {
+		if(typeof type == "string") {
+			type = type.toLowerCase();
+			return dev.filter(function(d){return d.type==type});
+		}
+		error("'"+type+"' is not a supported controller type!");
+	} else return dev;
+}
+
+//Get the model type of a gamepad.
+exports.getType = getType; function getType(dev) {
+	if(dev.type != null) return dev.type; const gKeys=Object.keys(mapping);
+	for(let i=0,l=gKeys.length,m; i<l; i++) {
+		m = mapping[gKeys[i]]; if(dev.vendorId == m.vendor
+		&& dev.productId == m.product) return gKeys[i];
+	}
+	return false;
+}
+
+function getMode(dev) {
+	const type = getType(dev), a = api[type];
+	if(a && a._getMode) return a._getMode(dev);
+	return false;
+}
+
+//Get a list of special features the gamepad supports.
+exports.getFeatures = function(dev) {
+	if(dev.map) return dev.map.special || [];
+	let type = getType(dev);
+	if(type)
+	return false;
+}
+
+//Open a gamepad device for communication.
+exports.open = function(dev, opt) {
+	if(typeof opt != "object") opt = {};
+	const gType = getType(dev);
 	if(!gType) error("Provided device is not a supported controller!");
-	try { var gmp = new hid.HID(device.path); }
+	try { var gmp = new hid.HID(dev.path); }
 	catch(e) { error("Could not connect to the controller!", e); }
-	//Gamepad Functions:
-	var gFn = supList[gType]; if(gFn) { if(gFn[0]) gmp.setLed=gFn[0].bind(gmp);
-	if(gFn[1]) gmp.rumble=gFn[1].bind(gmp), gmp.rumbleAdd=gFn[2].bind(gmp); }
+	//Gamepad API:
+	var gFn = api[gType]; if(gFn) {
+		if(gFn._init) gFn._init.call(gmp);
+		for(var n=0,g=Object.keys(gFn),c=g.length,k; n<c; n++) {
+			k = g[n]; if(k[0] != '_') gmp[k] = gFn[k].bind(gmp);
+		}
+	}
 	//Internal Variables:
-	gmp.type = gType; gmp.rPowL = 0; gmp.rDurL = 0;
-	gmp.rPowR = 0; gmp.rDurR = 0; gmp.ledState = [0,0,0];
-	gmp.map = mapping[gType]; gmp.msData = {}; gmp.fData = {};
-	//gmp.digital={}; gmp.analog={}; gmp.motion={}; gmp.status={};
+	gmp.type = gType; gmp.mode = dev.mode; gmp.map = mapping[gType];
+	gmp.msData = {}; gmp.fData = {};
 	//Options Config:
 	gmp.aSAmt = typeof opt.smoothAnalog == "number" ? opt.smoothAnalog : 5;
 	gmp.aFAmt = typeof opt.joyDeadband == "number" ? opt.joyDeadband : 2;
@@ -62,89 +92,39 @@ exports.open = function(device, options) {
 		for(var i=0,l=mKeys.length;i<l;i++) { gmp.msData[mKeys[i]]=[]; gmp.fData[mKeys[i]] = 0; }
 	}
 	//Event Listeners:
-	var parser = (gFn && gFn[3]) || genericParse; gmp.on("data", parser.bind(gmp));
+	var parser = (gFn&&gFn._parse) || parseInput; gmp.on("data", parser.bind(gmp));
 	gmp.on("error", function(err) {if(err == RD_ERR) { if(gmp.ondisconnect) gmp.
-	ondisconnect.call(gmp) } else if(gmp.onerror) gmp.onerror.call(gmp, err)});
+	ondisconnect.call(gmp)} else if(gmp.onerror) gmp.onerror.call(gmp, err)});
 	return gmp;
 }
 
-//Get the model name of a gamepad:
-exports.getType = function(gamepad) {
-	if(gamepad.type) return gamepad.type;
-	var gKeys=Object.keys(mapping), fil=isDev.bind(gamepad);
-	for(var i=0,l=gKeys.length;i<l;i++) if(fil(gKeys[i])) return gKeys[i];
-	return false;
-}
-
-//Get a list of special features the gamepad supports:
-exports.getFeatures = function(gamepad) {
-	if(gamepad.map) return gamepad.map.special || [];
-	return false;
-}
-
 //Generic Gamepad API:
-function genericParse(data) {
+function parseInput(data) {
+	var ofs = 0; if(data[0] == this.map['bt-id-byte']) {
+		if(this.map['bt-offset']) ofs = this.map['bt-offset'];
+	}
 	var uTrig; if(this.ondigital || this.onupdate) { //Digital:
-		var digital = parseDigital(data, this); if(!this.digital) this.digital = digital;
+		var digital = parseDigital(data, this, ofs); if(!this.digital) this.digital = digital;
 		uTrig = handle(digital, this.digital, this.ondigital?this.ondigital.bind(this):0);
 	}
 	if(this.onanalog || this.onupdate) { //Analog:
-		var analog = parseAnalog(data, this); if(!this.analog) this.analog = analog;
+		var analog = parseAnalog(data, this, ofs); if(!this.analog) this.analog = analog;
 		var trig = handle(analog, this.analog, this.onanalog?this.onanalog.bind(this):0);
 		if(trig && this.onupdate) {if(!uTrig) uTrig = trig; else objAdd(uTrig, trig)}
 	}
 	if(this.onmotion && this.map.special.motion) { //Motion:
-		var motion = parseMotion(data, this); if(!this.motion) this.motion = motion;
-		var trig = handle(motion, this.motion, this.onmotion.bind(this));
+		var motion = parseMotion(data, this, ofs); if(!this.motion) this.motion = motion;
+		var trig = handle(motion, this.motion, this.onmotion.bind?this.onmotion.bind(this):null);
 		if(trig && this.onupdate) {if(!uTrig) uTrig = trig; else objAdd(uTrig, trig)}
 	}
-	if(this.onstatus && this.map.special.charge) { //Status:
-		var status = parseStatus(data, this); if(!this.status) this.status = {};
-		var trig = handle(status, this.status, this.onstatus.bind(this));
+	if(this.onstatus && this.map.special.length) { //Status:
+		var status = parseStatus(data, this, ofs); if(!this.status) this.status = status;
+		var trig = handle(status, this.status, this.onstatus.bind?this.onstatus.bind(this):null);
 		if(trig && this.onupdate) {if(!uTrig) uTrig = trig; else objAdd(uTrig, trig)}
 	}
 	if(uTrig && this.onupdate) this.onupdate.bind(this)(uTrig); //Frame Update.
 }
 
-//DualShock 3 API:
-function ds3SetLed(state, two, three, four) {
-	if(typeof two == "undefined") this.ledState = [(state*2 & 0x1E)];
-	else this.ledState = [(!!state*2)+(!!two*4)+(!!three*8)+(!!four*16)];
-	ds3Write(this);
-}
-function ds3Rumble(left, right, durLeft, durRight) {
-	this.rPowL = (left & 0xFF), this.rPowR = (right & 0xFF),
-	this.rDurL = (durLeft & 0xFF), this.rDurR = (durRight & 0xFF);
-	if(!this.rDurL) this.rDurL = 254; if(!this.rDurR) this.rDurR = 254;
-	ds3Write(this);
-}
-function ds3RumbleAdd(left, right, durLeft, durRight) {
-	if(left) this.rPowL=left<0?0:(left & 0xFF);
-	if(right) this.rPowR=right<0?0:(right & 0xFF);
-	if(durRight) this.rDurR=durRight<0?0:(durRight & 0xFF);
-	if(durLeft) this.rDurL=durLeft<0?0:(durLeft & 0xFF);
-	if(!this.rDurL) this.rDurL = 254; if(!this.rDurR) this.rDurR = 254;
-	ds3Write(this);
-}
-function ds3Write(dev) {
-	dev.write([
-		0x01/*Report ID*/, 0x00,
-		dev.rDurR, //Rumble Duration Right
-		dev.rPowR, //Rumble Power Right
-		dev.rDurL, //Rumble Duration Left
-		dev.rPowL, //Rumble Power Left
-		0x00, 0x00, 0x00, 0x00,
-		dev.ledState[0], //LED State
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00
-	]);
-}
 //var prevData = [{},{},{},{},{}], nLedVal = 0;
 /*function ds3Parse(data) {
 	//data[6] = data[6]/2; data[7] = data[7]/2; data[8] = data[8]/2; data[9] = data[9]/2;
@@ -178,59 +158,38 @@ function ds3Write(dev) {
 	}
 }*/
 
-//DualShock 4 API:
-//>>>>> (UNPROVEN) <<<<<
-function ds4SetLed(r, g, b) { this.ledState = [(r & 0xFF), (g & 0xFF), (b & 0xFF)]; ds4Write(this); }
-function ds4Rumble(left, right) {
-	//if(typeof durLeft != "number") durLeft = 254;
-	//if(typeof durRight != "number") durRight = 254;
-	this.rPowL = (left & 0xFF), this.rPowR = (right & 0xFF);
-	//this.rDurL = (durLeft & 0xFF), this.rDurR = (durRight & 0xFF);
-	ds4Write(this);
-}
-function ds4Write(dev) { //>>>> UNPROVEN! <<<<
-	gamepad.write([
-		0x05, 0xff, 0x04, 0x00,
-		dev.rPowR, //Rumble Power Right
-		dev.rPowL, //Rumble Power Left
-		dev.ledState[0], //LED Red
-		dev.ledState[1], //LED Green
-		dev.ledState[2], //LED Blue
-		0, //data.flashOn,
-		0 //data.flashOff
-	]);
-}
-function ds4Parse(data) {
-	console.log(data);
-}
-
 //Parsing Assist:
-function parseDigital(data, gpad) {
-	var dArr={}, map=gpad.map.button, keys=Object.keys(map);
+function newDat() { return {
+	get cross() {return this.a}, get circle() {return this.b},
+	get square() {return this.x}, get triangle() {return this.y}
+}}
+
+function parseDigital(data, gpad, ofs) {
+	var dArr=newDat(), map=gpad.map.button, keys=Object.keys(map);
 	for(var i=0,l=keys.length; i<l; i++) {
-		var key=keys[i], dPos=map[key][0], dSub=map[key][1];
+		var key=keys[i], dPos=map[key][0]+ofs, dSub=map[key][1];
 		dArr[key] = (data[dPos] & Math.pow(2,dSub)) != 0;
 	}
 	return dArr;
 }
 
-function parseAnalog(data, gpad) {
-	var dArr={}, map=gpad.map.analog, keys=Object.keys(map),
+function parseAnalog(data, gpad, ofs) {
+	var dArr=newDat(), map=gpad.map.analog, keys=Object.keys(map),
 	sArr=gpad.msData, fArr=gpad.fData, sAmt=gpad.aSAmt, fAmt=gpad.aFAmt;
 	for(var i=0,l=keys.length; i<l; i++) {
-		var key=keys[i], dPos=map[key], val=sAmt ? smooth(data[dPos],sArr[key],sAmt) : data[dPos];
+		var key=keys[i], dPos=map[key]+ofs, val=sAmt ? smooth(data[dPos],sArr[key],sAmt) : data[dPos];
 		if(fAmt && typeof fArr[key] == "number") { val = filter(val, fArr[key], fAmt); fArr[key] = val; }
 		dArr[key] = val;
 	}
 	return dArr;
 }
 
-function parseMotion(data, gpad) {
-	var dArr={}, map=gpad.map.motion, keys=Object.keys(map), sArr=gpad.msData,
-	fArr=gpad.fData, sAmt=gpad.mSAmt, fAmt=gpad.mFAmt; //, vMax=Math.pow(2,map.bits)-1;
+function parseMotion(data, gpad, ofs) {
+	var dArr={}, map=gpad.map.motion, keys=Object.keys(map),
+	sArr=gpad.msData, fArr=gpad.fData, sAmt=gpad.mSAmt, fAmt=gpad.mFAmt;
 	for(var i=0,l=keys.length; i<l; i++) {
 		var key=keys[i], dPos=map[key]; if(typeof dPos == "object") {
-			var val = (data[dPos[0]]>1 ? -data[dPos[1]] : 256-data[dPos[1]]);
+			var val = (data[dPos[0]+ofs]>1 ? -data[dPos[1]+ofs] : 256-data[dPos[1]+ofs]);
 			if(sAmt) val = smooth(val, sArr[key], sAmt);
 			if(fAmt) { val = filter(val, fArr[key], fAmt); fArr[key] = val; }
 			dArr[key] = val;
@@ -239,24 +198,24 @@ function parseMotion(data, gpad) {
 	return dArr;
 }
 
-function parseStatus(data, gpad) {
+function parseStatus(data, gpad, ofs) {
 	var dArr={}, map=gpad.map.status, keys=Object.keys(map);
 	for(var i=0,l=keys.length; i<l; i++) {
 		var key=keys[i], mCon=map[key]; if(typeof mCon == "object") {
 			var mDat = Object.assign({},mCon); delete mDat["index"];
-			var dat=data[mCon["index"]],sKeys=Object.keys(mDat),mVal=obMax(mDat),lDst=mDat[mVal];
+			var dat=data[mCon["index"]+ofs],sKeys=Object.keys(mDat),mVal=obMax(mDat),lDst=mDat[mVal];
 			for(var s=0,g=sKeys.length; s<g; s++) { var sKey=sKeys[s], sVal=mDat[sKey];
 				if(typeof sVal == "number") { var dst=mDat[sKey]-dat; if(dst>=0&&dst<lDst) dArr[key]=sKey,lDst=dst; }
-				else if(parseStatusExp(sVal, data)) { dArr[key]=sKey; break; }
+				else if(parseStatusExp(sVal, data, ofs)) { dArr[key]=sKey; break; }
 			} if(!dArr[key]) dArr[key] = mVal;
-		} else dArr[key] = data[mCon];
+		} else dArr[key] = data[mCon+ofs];
 	}
 	return dArr;
 }
 
-function parseStatusExp(arr, dat) {
+function parseStatusExp(arr, dat, ofs) {
 	var tExp=0; for(var i=0,l=arr.length; i<l; i++) { var exp = arr[i];
-	if(exp[2] ? dat[exp[0]]>=exp[1] : dat[exp[0]]<=exp[1]) tExp++; }
+	if(exp[2] ? dat[exp[0]+ofs]>=exp[1] : dat[exp[0]+ofs]<=exp[1]) tExp++; }
 	return tExp == l;
 }
 
@@ -273,7 +232,7 @@ function filter(input, prevVal, amt) {
 	return prevVal;
 }
 
-function handle(data, prev, func, update) {
+function handle(data, prev, func) {
 	for(var keys=Object.keys(data),u={},i=0,l=keys.length; i<l; i++) {
 		if(data[keys[i]] != prev[keys[i]]) { prev[keys[i]]=data[keys[i]]; u[keys[i]]=true; if(func)func(keys[i],data[keys[i]]); }
 	} return Object.keys(u).length?u:false;

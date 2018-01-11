@@ -1,13 +1,15 @@
-//DualShock Library Demo:
+//This work is licensed under a GNU General Public License, v3.0. Visit http://gnu.org/licenses/gpl-3.0-standalone.html for details.
+//DualShock Library Demo, Copyright (©) 2017 Bryce Peterson (Nickname: Pecacheu, Email: Pecacheu@gmail.com)
 
-var chalk = require('chalk'),
+const chalk = require('chalk'),
 ds = require('dualshock');
 
-var debug = false;
+const debug = false;
 
 //Main Program:
 function begin() {
-	waitForExit(); var device = ds.getDevices("ds3")[0];
+	waitForExit(); var list = ds.getDevices(), device = list[0];
+	console.log(chalk.green("Devices:"),list);
 	if(!device) { console.log(chalk.red("Could not find a DualShock controller!")); process.exit(); }
 	
 	//Open gamepad device, return open gamepad:
@@ -51,12 +53,22 @@ function begin() {
 	//You might think that changed object would be better as an array, but then you'd have to rummage around the array
 	//searching for an element with the desiered value, but with the object approch you can just check like if(changed.ps) for example.
 	
-	//NOTE: even onupdate won't be able to properly read motion or status data (through gamepad.motion and gamepad.status objects) unless
-	//at the very least an empty function is assigned to onmotion or onstatus callbacks, respectively. This is because if onmotion and
-	//onstatus are not present, motion and status data is not parsed at all to save resources.
+	//NOTE: even onupdate won't be able to properly read motion or status data (through gamepad.motion and gamepad.status objects)
+	//unless a listener (or simply 'true') is assigned to onmotion or onstatus callbacks, respectively. This is because when
+	//onmotion and onstatus are not present, motion and status data is not parsed at all to save resources.
+	
+	
+	
+	gamepad.onmotion = true;
+	gamepad.onstatus = true;
+	
+	setInterval(function() {
+		gamepad.setLed(Math.floor(Math.random()*255),Math.floor(Math.random()*255),Math.floor(Math.random()*255));
+	}, 100);
 	
 	gamepad.onupdate = function(changed) {
-		rumbleScript(changed, this);
+		//rumbleScript(changed, this);
+		console.log(this.digital,this.analog,this.status);
 	}
 	function rumbleScript(chg, g) {
 		//Rumble On:
@@ -103,4 +115,3 @@ function waitForExit() {
 
 //Export stuff for AutoLoader:
 exports.begin = begin;
-exports.debug = function(db) { debug = db; }

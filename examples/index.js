@@ -1,4 +1,4 @@
-//Node.js Auto Loader v3.1, created by Bryce Peterson (Nickname: Pecacheu, Email: Pecacheu@gmail.com). Copyright 2016, All rights reserved.
+//Node.js Auto Loader v3.2, created by Bryce Peterson (Nickname: Pecacheu, Email: Pecacheu@gmail.com). Copyright 2016, All rights reserved.
 
 var os = require('os'),
 fs = require('fs'),
@@ -28,10 +28,7 @@ if(verifyDepends()) {
 	//------------------------------------------ MAIN CODE ------------------------------------------
 	var chalk = require('chalk');
 	console.log(chalk.gray("All Dependencies Found!\n"));
-	
-	var main = require("./main");
-	
-	main.debug(debug); main.begin();
+	require("./main").begin();
 	//-------------------------------------- END OF MAIN CODE ---------------------------------------
 } else {
 	console.log("Dependencies Missing!\n");
@@ -44,7 +41,8 @@ function verifyDepends() {
 	var pathsExist = true;
 	//Node.js Modules:
 	for(var n=0,l=npmInstallNames.length; n<l; n++) {
-		if(!fs.existsSync(__dirname+"/node_modules/"+npmInstallNames[n])) { pathsExist = false; break; }
+		var nSplit = npmInstallNames[n].split(" as "), name = nSplit[0]; if(nSplit.length > 1) name = nSplit[1];
+		if(!fs.existsSync(__dirname+"/node_modules/"+name)) { pathsExist = false; break; }
 	}
 	//Internal HTML Client Files:
 	for(n=0,l=externalFiles.length; n<l; n++) {
@@ -100,23 +98,20 @@ function doInstall() {
 	if(autoInstallOptionals) npmInstallNames = npmInstallNames.concat(optionalInstall);
 	var i = 0; runinternal();
 	function runinternal() {
-		if(i >= npmInstallNames.length) { deleteFolder(__dirname+"/etc"); console.log("Installer Finished. Exiting...\n"); process.exit(); }
-		else if(deleteDir || !fs.existsSync(__dirname+"/node_modules/"+npmInstallNames[i])) {
-			var module = npmInstallNames[i]; i++;
-			console.log("Installing NPM Module: "+module+"\n");
-			
-			var args = ["install", module, "--prefix", __dirname];
-			var cmd = spawn(sysOS == "Windows" ? "npm.cmd" : "npm", args);
-			cmd.stdout.pipe(process.stdout); cmd.stderr.pipe(process.stdout);
-			
-			cmd.on('close', function(code) {
-				console.log("Module '"+module+"' Installed.\n");
-				runinternal();
-			});
-		} else {
-			var module = npmInstallNames[i]; i++;
-			console.log("Skipping '"+module+"' Module.\n");
-			runinternal();
+		if(i >= npmInstallNames.length) { deleteFolder(__dirname+"/etc"); console.log("Installer Finished. Exiting...\n"); process.exit(); } else {
+			var nSplit = npmInstallNames[i].split(" as "), module = nSplit[0], inst = nSplit[0]; if(nSplit.length > 1) module = nSplit[1];
+			i++; if(deleteDir || !fs.existsSync(__dirname+"/node_modules/"+module)) {
+				console.log("Installing NPM Module: "+module+"\n");
+				
+				var args = ["install", inst, "--prefix", __dirname];
+				var cmd = spawn(sysOS == "Windows" ? "npm.cmd" : "npm", args);
+				cmd.stdout.pipe(process.stdout); cmd.stderr.pipe(process.stdout);
+				
+				cmd.on('close', function(code) {
+					console.log("Module '"+module+"' Installed.\n");
+					runinternal();
+				});
+			} else { console.log("Skipping '"+module+"' Module.\n"); runinternal(); }
 		}
 	}
 }
