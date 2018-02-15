@@ -4,8 +4,13 @@
 const crc = require('../crc');
 
 exports._init = function() {
-	this.rPowL = 0; this.rDurL = 0; this.rPowR = 0;
-	this.rDurR = 0; this.ledState = [0,0,0,0,0];
+	this.rPowL = 0, this.rPowR = 0, this.ledState = [0,0,0,0,0];
+}
+
+exports._parse = function(data,chg) {
+	//Reset finger smoothing data on touchpad press:
+	if(chg.t1 && this.digital.t1) this.msData.t1X=[], this.msData.t1Y=[];
+	if(chg.t2 && this.digital.t2) this.msData.t2X=[], this.msData.t2Y=[];
 }
 
 exports._getMode = function(dev) {
@@ -14,51 +19,19 @@ exports._getMode = function(dev) {
 
 exports.setLed = function(r, g, b, flashOn, flashOff) {
 	let s = this.ledState;
-	for(let i=0; i<5; i++) if(arguments[i] != null) s[i] = arguments[i];
+	for(let i=0; i<5; i++) if(arguments[i] != null) s[i] = arguments[i]||0;
 	ds4Write(this);
 }
 
 exports.rumble = function(left, right) {
-	//if(typeof durLeft != "number") durLeft = 254;
-	//if(typeof durRight != "number") durRight = 254;
-	this.rPowL = (left & 0xFF), this.rPowR = (right & 0xFF);
-	//this.rDurL = (durLeft & 0xFF), this.rDurR = (durRight & 0xFF);
+	this.rPowL = left||0, this.rPowR = right||0;
 	ds4Write(this);
-	
-	/*this.rPowL = (left & 0xFF), this.rPowR = (right & 0xFF),
-	this.rDurL = (durLeft & 0xFF), this.rDurR = (durRight & 0xFF);
-	if(!this.rDurL) this.rDurL = 254; if(!this.rDurR) this.rDurR = 254;
-	ds3Write(this);*/
 }
 
-/*exports.rumbleAdd = function(left, right, durLeft, durRight) {
-	if(left) this.rPowL=left<0?0:(left & 0xFF);
-	if(right) this.rPowR=right<0?0:(right & 0xFF);
-	if(durRight) this.rDurR=durRight<0?0:(durRight & 0xFF);
-	if(durLeft) this.rDurL=durLeft<0?0:(durLeft & 0xFF);
-	if(!this.rDurL) this.rDurL = 254; if(!this.rDurR) this.rDurR = 254;
-	ds3Write(this);
-}*/
-
-/*function ds3Write(dev) {
-	dev.write([
-		0x01/*Report ID*, 0x00,
-		dev.rDurR, //Rumble Duration Right
-		dev.rPowR, //Rumble Power Right
-		dev.rDurL, //Rumble Duration Left
-		dev.rPowL, //Rumble Power Left
-		0x00, 0x00, 0x00, 0x00,
-		dev.ledState[0], //LED State
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0xff, 0x27, 0x10, 0x00, 0x32,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00
-	]);
-}*/
+exports.rumbleAdd = function(left, right) {
+	if(left>0) this.rPowL = left; if(right>0) this.rPowR = right;
+	ds4Write(this);
+}
 
 function ds4Write(dev) {
 	if(dev.mode == 'usb') dev.write([
@@ -121,9 +94,8 @@ function ds4Write(dev) {
 		msg[77] = crc32[2];
 		msg[78] = crc32[3];
 		}
-		let s = ''; msg.forEach(function(e) { s += "0x"+(e?e.toString(16):'00')+", "; }); console.log(s.substr(0,s.length-2));
+		//let s = ''; msg.forEach(function(e) { s += "0x"+(e?e.toString(16):'00')+", "; }); console.log(s.substr(0,s.length-2));
 		msg.shift(); //Remove 0xa2 at start.
-		dev.write(msg);
-		//dev.sendFeatureReport(msg);
+		dev.write(msg, true);
 	}
 }

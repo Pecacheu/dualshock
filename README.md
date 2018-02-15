@@ -1,6 +1,7 @@
 # DualShock Library
-###  Documentation & Code Examples Coming Soon...
+##### *NOTE: Please run `npm install` in `node_modules/node-hid` before using!*
 
+###  Documentation & Code Examples Coming Soon.
 ######  For now, here's a quick summary:
 Install with `npm install dualshock`, then include with `ds = require('dualshock')`
 
@@ -24,5 +25,5 @@ Install with `npm install dualshock`, then include with `ds = require('dualshock
 All callback functions follow the format `function(buttonOrAxis, value)`
 
 #### Examples:
-To use the example program, place `main.js` and `index.js` in an empty folder and run the command `node index.js`.
-The actual example is in main.js. index.js is only an auto-dependency-loader.
+To use the example program, cd to the examples folder and run the command `node test`.
+You'll need to install the npm module `chalk`.

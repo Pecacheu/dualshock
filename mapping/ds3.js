@@ -3,8 +3,8 @@
 "use strict";
 
 exports._init = function() {
-	this.rPowL = 0; this.rDurL = 0; this.rPowR = 0;
-	this.rDurR = 0; this.ledState = 0;
+	this.rPowL = 0, this.rDurL = 0, this.rPowR = 0,
+	this.rDurR = 0, this.ledState = 0;
 }
 
 exports.setLed = function(state, two, three, four) {
@@ -14,18 +14,15 @@ exports.setLed = function(state, two, three, four) {
 }
 
 exports.rumble = function(left, right, durLeft, durRight) {
-	this.rPowL = (left & 0xFF), this.rPowR = (right & 0xFF),
-	this.rDurL = (durLeft & 0xFF), this.rDurR = (durRight & 0xFF);
-	if(!this.rDurL) this.rDurL = 254; if(!this.rDurR) this.rDurR = 254;
+	this.rPowL = left||0, this.rPowR = right||0, this.rDurL = durLeft, this.rDurR = durRight;
+	if(!durLeft) this.rDurL = 254; if(!durRight) this.rDurR = 254;
 	ds3Write(this);
 }
 
 exports.rumbleAdd = function(left, right, durLeft, durRight) {
-	if(left) this.rPowL=left<0?0:(left & 0xFF);
-	if(right) this.rPowR=right<0?0:(right & 0xFF);
-	if(durRight) this.rDurR=durRight<0?0:(durRight & 0xFF);
-	if(durLeft) this.rDurL=durLeft<0?0:(durLeft & 0xFF);
-	if(!this.rDurL) this.rDurL = 254; if(!this.rDurR) this.rDurR = 254;
+	if(left>0) this.rPowL=left; if(right>0) this.rPowR=right;
+	if(durRight>0) this.rDurR=durRight; else if(!this.rDurR) this.rDurR = 254;
+	if(durLeft>0) this.rDurL=durLeft; else if(!this.rDurL) this.rDurL = 254;
 	ds3Write(this);
 }
 

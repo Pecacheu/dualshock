@@ -1,0 +1,3 @@
+[submodule "node_modules/node-hid"]
+	path = node_modules/node-hid
+	url = https://github.com/Pecacheu/node-hid

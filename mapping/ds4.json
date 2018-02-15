@@ -1,20 +1,57 @@
 {
   "vendor": 1356,
-  "product": 1476,
+  "product": {"1476":"old","2508":"new"},
   "bt-id-byte":17,
   "bt-offset":2,
   "button": {
+    "a": [5,5],
+    "b": [5,6],
+    "x": [5,4],
+    "y": [5,7],
+    "hat": 5,
+    "l1": [6,0],
+    "l2": [6,2],
+    "l3": [6,6],
+    "r1": [6,1],
+    "r2": [6,3],
+    "r3": [6,7],
+    "select": [6,4],
+    "start": [6,5],
+    "ps": [7,0],
+    "pad": [7,1],
+    "t1": [35,7,true],
+    "t2": [39,7,true]
   },
   "analog": {
     "lStickX": 1,
     "lStickY": 2,
     "rStickX": 3,
-    "rStickY": 4
+    "rStickY": 4,
+    "l2": 8,
+    "r2": 9,
+    "t1X": [36,0,12],
+    "t1Y": [37,4,12],
+    "t2X": [40,0,12],
+    "t2Y": [41,4,12]
   },
   "motion": {
+    "bits": -16,
+    "accelX": 13,
+    "accelY": 15,
+    "accelZ": 17,
+    "gyroRoll": 19,
+    "gyroYaw": 21,
+    "gyroPitch": 23
   },
   "status": {
-    "audio":30
+    "audio": {
+      "index": 30,
+      "Headset": 123,
+      "Headphones": 59,
+      "Built-In": 27,
+      "Built-In (Bluetooth)": 8
+    },
+    "battery": 12
   },
   "special": [
     "rumble",

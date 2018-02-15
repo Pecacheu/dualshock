@@ -1,23 +1,31 @@
 //This work is licensed under a GNU General Public License, v3.0. Visit http://gnu.org/licenses/gpl-3.0-standalone.html for details.
 //DualShock Library Demo, Copyright (©) 2017 Bryce Peterson (Nickname: Pecacheu, Email: Pecacheu@gmail.com)
 
-const chalk = require('chalk'),
-ds = require('dualshock');
+const chalk = require('chalk'), ds = require('..');
 
 const debug = false;
 
+var nLedVal = 0;
+begin();
+
 //Main Program:
 function begin() {
-	waitForExit(); var list = ds.getDevices(), device = list[0];
-	console.log(chalk.green("Devices:"),list);
-	if(!device) { console.log(chalk.red("Could not find a DualShock controller!")); process.exit(); }
+	waitForExit();
 	
-	//Open gamepad device, return open gamepad:
+	//Get list of devices. Accepts optional string to filter by type.
+	var list = ds.getDevices();
+	
+	console.log(chalk.green("Devices:"),list);
+	if(list.length < 1) { console.log(chalk.red("Could not find a controller!")); process.exit(); }
+	
+	//Get gamepad's device object:
+	var device = list[0];
+	
+	//Open device, return gamepad object:
 	var gamepad = ds.open(device, {smoothAnalog:10, smoothMotion:15, joyDeadband:4, moveDeadband:4});
 	
 	//If you want to react to button presses to trigger rumble and led functions, you can do so like this:
 	
-	var nLedVal = 0;
 	/*gamepad.ondigital = function(button, value) {
 		//console.log("BUTTON '"+button+"' = "+value);
 		rumbleScript(button, value, 'd', this);
@@ -28,26 +36,26 @@ function begin() {
 	}
 	function rumbleScript(axis, val, call, g) {
 		//Rumble On:
-		if(call == 'a' && (axis == 'l1' || axis == 'r1') && (g.analog.l1 || g.analog.r1))
-		{ g.rumble(g.analog.l1, g.analog.r1>0); console.log("rumble set", [g.analog.l1,(g.analog.r1>0)?255:0]); }
+		if(call == 'a' && (axis == 'l2' || axis == 'r2') && (g.analog.l2 || g.analog.r2))
+		{ g.rumble(g.analog.l2, g.analog.r2>0); console.log("rumble set", [g.analog.l2,(g.analog.r2>0)?255:0]); }
 		else if(call == 'd' && axis == 'l3' && val) { g.rumbleAdd(94, 0, 255, 0); console.log("rumble slow"); }
 		else if(call == 'd' && axis == 'start' && val) { g.rumbleAdd(0, 255, 0, 5); console.log("rumble tap"); }
 		//Rumble Off:
-		else if((call == 'a' && (axis == 'l1' || axis == 'r1') || call == 'd' && (axis == 'l3' || axis == 'start')) &&
-		!(g.analog.l1 || g.analog.r1 || g.digital.l3 || g.digital.start)) { g.rumble(0, 0); console.log("rumble off"); }
+		else if((call == 'a' && (axis == 'l2' || axis == 'r2') || call == 'd' && (axis == 'l3' || axis == 'start')) &&
+		!(g.analog.l2 || g.analog.r2 || g.digital.l3 || g.digital.start)) { g.rumble(0, 0); console.log("rumble off"); }
 		//Change LED Pattern:
 		else if(call == 'd' && axis == 'ps' && val) { g.setLed(nLedVal); console.log("led set "+nLedVal); nLedVal++; if(nLedVal > 15) nLedVal = 0; }
 	}*/
 	
-	//A little complicated, right? Plus, it's not very reliable. Theoretically, gamepad.analog.l1 should reflect the
-	//current value of the L1 trigger. But to absolutly minimize lag, callbacks are called before the parsing of all data
+	//A little complicated, right? Plus, it's not very reliable. Theoretically, gamepad.analog.l2 should reflect the
+	//current value of the l2 trigger. But to absolutly minimize lag, callbacks are called before the parsing of all data
 	//is finished, so sometimes analog data parsing is not finished yet, meaning the value you get isn't up to date!
 	
 	//Fortunatly there's a better way! We can use gamepad.onupdate instead.
 	//gamepad.onupdate is called ONLY ONCE every frame update, versus onanalog and ondigital which are called
 	//many times each frame depending on how many inputs changed from the last frame. onupdate function only has one
 	//parameter, 'changed', which is an object containing names of any inputs that changed from the last frame in this format:
-	//EX. {l1:true, cross:true, select:true, lStickX:true} Notice how all values are true, even analog ones? The value of items
+	//EX. {l2:true, cross:true, select:true, lStickX:true} Notice how all values are true, even analog ones? The value of items
 	//doesn't actually matter. The important thing is that they're present.
 	
 	//You might think that changed object would be better as an array, but then you'd have to rummage around the array
@@ -57,26 +65,29 @@ function begin() {
 	//unless a listener (or simply 'true') is assigned to onmotion or onstatus callbacks, respectively. This is because when
 	//onmotion and onstatus are not present, motion and status data is not parsed at all to save resources.
 	
-	
-	
 	gamepad.onmotion = true;
 	gamepad.onstatus = true;
 	
-	setInterval(function() {
+	//DS4 Only: Random LED Stuffs:
+	/*setInterval(function() {
 		gamepad.setLed(Math.floor(Math.random()*255),Math.floor(Math.random()*255),Math.floor(Math.random()*255));
-	}, 100);
+	}, 100);*/
 	
 	gamepad.onupdate = function(changed) {
-		//rumbleScript(changed, this);
-		console.log(this.digital,this.analog,this.status);
+		rumbleScript(changed, this);
+		//Uncomment one of these lines for debugging!
+		//console.log(this.digital);
+		//console.log(this.analog);
+		//console.log(this.motion,this.status);
 	}
+	
 	function rumbleScript(chg, g) {
 		//Rumble On:
-		if(chg.l1 || chg.r1) { g.rumbleAdd(g.analog.l1?g.analog.l1:-1, g.analog.r1?255:-1, 254, 254); console.log("rumble set", [g.analog.l1,(g.analog.r1>0)?255:0]); }
+		if(chg.l2 || chg.r2) { g.rumbleAdd(g.analog.l2?g.analog.l2:-1, g.analog.r2?255:-1, 254, 254); console.log("rumble set", [g.analog.l2,(g.analog.r2>0)?255:0]); }
 		else if(chg.l3 && g.digital.l3) { g.rumbleAdd(94, 0, 255, 0); console.log("rumble slow"); }
 		else if(chg.start && g.digital.start) { g.rumbleAdd(0, 255, 0, 5); console.log("rumble tap"); }
 		//Rumble Off:
-		if((chg.l1 || chg.r1 || chg.l3 || chg.start) && !(g.analog.l1 || g.analog.r1 || g.digital.l3 || g.digital.start)) { g.rumble(0, 0); console.log("rumble off"); }
+		if((chg.l2 || chg.r2 || chg.l3 || chg.start) && !(g.analog.l2 || g.analog.r2 || g.digital.l3 || g.digital.start)) { g.rumble(0, 0); console.log("rumble off"); }
 		//Change LED Pattern:
 		if(chg.ps && g.digital.ps) { g.setLed(nLedVal); console.log("led set "+nLedVal); nLedVal++; if(nLedVal > 15) nLedVal = 0; }
 	}
@@ -112,6 +123,3 @@ function waitForExit() {
 		}
 	});
 }
-
-//Export stuff for AutoLoader:
-exports.begin = begin;
