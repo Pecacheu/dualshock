@@ -9,7 +9,8 @@
     "test": "node ds3test.js"
   },
   "dependencies": {
-    "node-hid": ">=0.5.1"
+    "node-hid": ">=0.5.1",
+    "chalk": ">=2.0.0"
   },
   "keywords": [
     "dualshock",
