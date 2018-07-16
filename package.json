@@ -1,6 +1,6 @@
 {
   "name": "dualshock",
-  "version": "3.1.3",
+  "version": "3.1.4",
   "description": "Node.js module for DualShock (3 and 4) controllers.",
   "main": "index.js",
   "repository": "git://github.com/pecacheu/dualshock.git",
@@ -9,6 +9,7 @@
     "test": "node ds3test.js"
   },
   "dependencies": {
+    "node-hid": "Pecacheu/node-hid",
     "chalk": ">=2.0.0"
   },
   "keywords": [

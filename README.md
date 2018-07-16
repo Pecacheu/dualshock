@@ -1,5 +1,4 @@
 # DualShock Library
-##### *NOTE: Please run `npm install` in `node_modules/node-hid` before using!*
 
 ### Now Supports:
 - DS4 led/rumble/trackpad even over bluetooth!
