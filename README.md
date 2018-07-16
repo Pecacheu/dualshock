@@ -7,7 +7,7 @@
 
 ###  Documentation & Code Examples Coming Soon.
 ######  For now, here's a quick summary:
-Install with `npm install dualshock`, then include with `ds = require('dualshock')`
+Install with `npm install dualshock --global-style`, then include with `ds = require('dualshock')`
 
 ####  Important Library Functions:
 - **ds.getDevices(type)** returns list of devices with given type
