@@ -2,7 +2,7 @@
 //JavaScript Audio Resampler
 //Copyright (C) 2011-2015 Grant Galitz
 //Released to Public Domain
-function Resampler(fromSampleRate, toSampleRate, channels, inputBuffer) {
+export function Resampler(fromSampleRate, toSampleRate, channels, inputBuffer) {
     //Input Sample Rate:
     this.fromSampleRate = +fromSampleRate;
     //Output Sample Rate:
@@ -172,4 +172,3 @@ Resampler.prototype.initializeBuffers = function () {
 		this.lastOutput = [];
 	}
 }
-module.exports = Resampler;

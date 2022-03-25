@@ -1,5 +1,4 @@
 //Code by Shubshub @ https://pastebin.com/KiazwqCu
-
 function CrcModel(width, name, polynomial, initial, finalXor, inputReflected, resultReflected) {
 	this.width = width;
 	this.name = name;
@@ -361,7 +360,7 @@ var CrcUtil = function() {
 	}
 };
 
-exports.crc32 = function(bytes) {
+export function crc32(bytes) {
 	var crc = new Crc(32, 0x04C11DB7, 0xFFFFFFFF, 0xFFFFFFFF, true, true);
 	var crcValue = crc.compute(bytes);
 	return new Uint8Array((new Int32Array([crcValue])).buffer);

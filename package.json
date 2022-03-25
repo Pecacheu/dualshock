@@ -1,16 +1,13 @@
 {
   "name": "dualshock",
-  "version": "3.1.4",
+  "version": "3.1.5",
   "description": "Node.js module for DualShock (3 and 4) controllers.",
   "main": "index.js",
   "repository": "git://github.com/pecacheu/dualshock.git",
   "homepage": "http://github.com/pecacheu/dualshock",
-  "scripts": {
-    "test": "node ds3test.js"
-  },
   "dependencies": {
-    "node-hid": "Pecacheu/node-hid",
-    "chalk": ">=2.0.0"
+    "chalk": "^2.0.0",
+    "node-hid": "^2.1.1"
   },
   "keywords": [
     "dualshock",
@@ -27,9 +24,10 @@
     "gamepad",
     "rumble",
     "vibrate",
-	"audio",
-	"sound"
+    "audio",
+    "sound"
   ],
-  "author": "Bryce Peterson <pecacheu@gmail.com>",
-  "license": "GPL-3.0"
+  "author": "Pecacheu <pecacheu@gmail.com>",
+  "license": "GPL-3.0",
+  "type": "module"
 }
